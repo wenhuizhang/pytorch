@@ -155,6 +155,7 @@ test_torchbench_perf() {
   print_cmake_info
 
   echo "Launching torchbench setup"
+  export MACOS_SETUP=1
   make -C $(pwd)/benchmarks/dynamo clone-deps
   make -C $(pwd)/benchmarks/dynamo pull-deps
   make -C $(pwd)/benchmarks/dynamo build-deps

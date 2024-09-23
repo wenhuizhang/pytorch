@@ -1,4 +1,5 @@
 # Makefile for the dashboard setup
+# Run with MACOS_SETUP=1 to run on macos
 PIP ?= python -m pip
 
 clone-deps:
@@ -27,9 +28,12 @@ build-deps: clone-deps
 	# conda env remove --name torchdynamo
 	# conda create --name torchdynamo -y python=3.8
 	# conda activate torchdynamo
-	conda install -y astunparse numpy scipy ninja pyyaml mkl mkl-include setuptools cmake \
+	conda install -y astunparse numpy scipy ninja pyyaml setuptools cmake \
 		typing-extensions requests protobuf numba cython scikit-learn
-	conda install -y -c pytorch magma-cuda116
+ifneq ($(MACOS_SETUP),1)
+		conda install -y mkl mkl-include
+		conda install -y -c pytorch magma-cuda116
+endif
 	conda install -y -c conda-forge librosa
 	(cd ../../../torchvision && python setup.py clean && python setup.py develop)
 	(cd ../../../torchdata && python setup.py install)
