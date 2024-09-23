@@ -158,7 +158,7 @@ test_torchbench_perf() {
   export MACOS_SETUP=1
   make -C $(pwd)/benchmarks/dynamo clone-deps
   make -C $(pwd)/benchmarks/dynamo pull-deps
-  make -C $(pwd)/benchmarks/dynamo build-deps
+  # make -C $(pwd)/benchmarks/dynamo build-deps
 
   TEST_REPORTS_DIR=$(pwd)/test/test-reports
   mkdir $TEST_REPORTS_DIR
