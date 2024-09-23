@@ -34,6 +34,9 @@ ifneq ($(MACOS_SETUP),1)
 		conda install -y mkl mkl-include
 		conda install -y -c pytorch magma-cuda116
 endif
+ifeq ($(MACOS_SETUP),1)
+		export CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -Wno-enum-constexpr-conversion" # TEMP - Workaround sentencepiece issue
+endif
 	conda install -y -c conda-forge librosa
 	(cd ../../../torchvision && python setup.py clean && python setup.py develop)
 	(cd ../../../torchdata && python setup.py install)
