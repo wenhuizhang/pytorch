@@ -163,9 +163,9 @@ test_torchbench_perf() {
   # make -C $(pwd)/benchmarks/dynamo build-deps
 
 	conda install -y astunparse numpy scipy ninja pyyaml setuptools cmake \
-		typing-extensions requests protobuf numba cython scikit-learn
+		typing-extensions requests protobuf numba cython scikit-learn detectron2
 	conda install -y -c conda-forge librosa
-	pip install torchvision torchdata torchtext torchaudio torchrec detectron2 torchbenchmark
+	pip install torchvision torchdata torchtext torchaudio torchrec torchbenchmark
 
   TEST_REPORTS_DIR=$(pwd)/test/test-reports
   mkdir $TEST_REPORTS_DIR
