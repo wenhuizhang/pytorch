@@ -155,10 +155,17 @@ test_torchbench_perf() {
   print_cmake_info
 
   echo "Launching torchbench setup"
-  export MACOS_SETUP=1
-  make -C $(pwd)/benchmarks/dynamo clone-deps
-  make -C $(pwd)/benchmarks/dynamo pull-deps
-  make -C $(pwd)/benchmarks/dynamo build-deps
+
+  # Sentencepiece build currently failing, will install using pip instead of building from source
+  # export MACOS_SETUP=1
+  # make -C $(pwd)/benchmarks/dynamo clone-deps
+  # make -C $(pwd)/benchmarks/dynamo pull-deps
+  # make -C $(pwd)/benchmarks/dynamo build-deps
+
+	conda install -y astunparse numpy scipy ninja pyyaml setuptools cmake \
+		typing-extensions requests protobuf numba cython scikit-learn
+	conda install -y -c conda-forge librosa
+	pip install torchvision torchdata torchtext torchaudio fbgemm_gpu torchrec detectron2 torchbenchmark
 
   TEST_REPORTS_DIR=$(pwd)/test/test-reports
   mkdir $TEST_REPORTS_DIR
