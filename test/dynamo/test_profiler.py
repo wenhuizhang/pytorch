@@ -176,7 +176,21 @@ class DynamoProfilerTests(torch._dynamo.test_case.TestCase):
         with torch.profiler.profile() as prof:
             opt_fn(*inputs)
 
-        self.assertTrue(any(e.name == "Torch-Compiled Region" for e in prof.events()))
+        for e in prof.events():
+            if "Torch-Compiled Region" in e.name:
+                print(e.name)
+        self.assertTrue(
+            any(e.name == "Torch-Compiled Region: 0/0_1" for e in prof.events())
+        )
+        self.assertTrue(
+            any(e.name == "Torch-Compiled Region: 1/0" for e in prof.events())
+        )
+        self.assertTrue(
+            any(e.name == "Torch-Compiled Region: 1/1" for e in prof.events())
+        )
+        self.assertTrue(
+            any(e.name == "Torch-Compiled Region: 0/1_1" for e in prof.events())
+        )
 
 
 if __name__ == "__main__":

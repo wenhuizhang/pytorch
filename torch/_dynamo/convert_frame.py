@@ -806,8 +806,12 @@ def _compile(
             output,
             hooks.guard_fail_fn if hooks else None,
         )
+        trace_id = CompileContext.get().current_trace_id()
+        trace_id_str = str(trace_id) if trace_id is not None else "N/A"
 
-        guarded_code = GuardedCode(out_code, check_fn.check_fn, compile_id)
+        guarded_code = GuardedCode(
+            out_code, check_fn.check_fn, compile_id, trace_id_str
+        )
 
         if not output.is_empty_graph() and hooks.guard_export_fn is not None:
             # We should not run the guard_export_fn when Dynamo does not

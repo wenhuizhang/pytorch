@@ -10,9 +10,14 @@
 #include <opcode.h>
 #include <stdbool.h>
 
+// The string has 26 static characters and 3 integers
+// Using int32 as max value for the integers they can be string of
+// len 10. Lastly, we need to add 1 for the null terminator:
+// 26 + 3 * 10 + 1 = 57
+#define MAX_TORCH_COMPILED_REGION_ANNOTATION_SIZE 57
+
 PyObject* guard_error_hook = NULL;
 const char* cache_lookup_profiler_str = "TorchDynamo Cache Lookup";
-
 static int active_dynamo_threads = 0;
 
 static Py_tss_t eval_frame_callback_key = Py_tss_NEEDS_INIT;
@@ -481,9 +486,16 @@ inline static PyObject* eval_custom_code(
     PyThreadState* tstate,
     THP_EVAL_API_FRAME_OBJECT* frame,
     PyCodeObject* code,
+    const char* trace_id,
     int throw_flag,
     int free_vars_copied) {
-  _PytorchRecordFunctionState* rf = _pytorch_record_function_enter("Torch-Compiled Region");
+  char annotation[MAX_TORCH_COMPILED_REGION_ANNOTATION_SIZE];
+  strcpy(annotation, "Torch-Compiled Region");
+  if (trace_id != NULL) {
+    strcat(annotation, ": ");
+    strcat(annotation, trace_id);
+  }
+  _PytorchRecordFunctionState* rf = _pytorch_record_function_enter(annotation);
   PyObject* result = eval_custom_code_impl(
     tstate,
     frame,
@@ -612,7 +624,9 @@ static PyObject* _custom_eval_frame(
   if (callback == Py_False) {
     DEBUG_TRACE("In run only mode %s", get_frame_name(frame));
     _PytorchRecordFunctionState* rf = _pytorch_record_function_enter(cache_lookup_profiler_str);
-    PyObject* maybe_cached_code = lookup(extra, locals, backend);
+    PyObject *maybe_cached_code;
+    const char*trace_id;
+    lookup(extra, locals, backend, &maybe_cached_code, &trace_id);
     _pytorch_record_function_exit(rf);
 
     Py_DECREF(locals);
@@ -629,7 +643,7 @@ static PyObject* _custom_eval_frame(
     // used cached version
     DEBUG_TRACE("cache hit %s", get_frame_name(frame));
     *should_clear_frame = 1;
-    return eval_custom_code(tstate, frame, cached_code, throw_flag, 0);
+    return eval_custom_code(tstate, frame, cached_code, trace_id, throw_flag, 0);
   }
   DEBUG_CHECK(PyDict_CheckExact(locals));
   DEBUG_CHECK(PyDict_CheckExact(frame->f_globals));
@@ -641,7 +655,9 @@ static PyObject* _custom_eval_frame(
   eval_frame_callback_set(Py_None);
 
   _PytorchRecordFunctionState* rf = _pytorch_record_function_enter(cache_lookup_profiler_str);
-  PyObject* maybe_cached_code = lookup(extra, locals, backend);
+  PyObject *maybe_cached_code;
+  const char *trace_id;
+  lookup(extra, locals, backend, &maybe_cached_code, &trace_id);
   _pytorch_record_function_exit(rf);
   if (maybe_cached_code == NULL) {
     // Python error
@@ -656,7 +672,7 @@ static PyObject* _custom_eval_frame(
     eval_frame_callback_set(callback);
     *should_clear_frame = 1;
     Py_DECREF(locals);
-    return eval_custom_code(tstate, frame, cached_code, throw_flag, free_vars_copied);
+    return eval_custom_code(tstate, frame, cached_code, trace_id, throw_flag, free_vars_copied);
   }
   // cache miss
   CacheEntry* cache_entry = extract_cache_entry(extra);
@@ -699,7 +715,7 @@ static PyObject* _custom_eval_frame(
     // Re-enable custom behavior
     eval_frame_callback_set(callback);
     *should_clear_frame = 1;
-    return eval_custom_code(tstate, frame, CacheEntry_get_code(new_cache_entry), throw_flag, free_vars_copied);
+    return eval_custom_code(tstate, frame, CacheEntry_get_code(new_cache_entry), CacheEntry_get_trace_id(new_cache_entry), throw_flag, free_vars_copied);
   } else {
     DEBUG_TRACE("create skip %s", get_frame_name(frame));
     Py_DECREF(result);
