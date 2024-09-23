@@ -165,7 +165,7 @@ test_torchbench_perf() {
 	conda install -y astunparse numpy scipy ninja pyyaml setuptools cmake \
 		typing-extensions requests protobuf numba cython scikit-learn
 	conda install -y -c conda-forge librosa
-	pip install torchvision torchdata torchtext torchaudio fbgemm_gpu torchrec detectron2 torchbenchmark
+	pip install torchvision torchdata torchtext torchaudio torchrec detectron2 torchbenchmark
 
   TEST_REPORTS_DIR=$(pwd)/test/test-reports
   mkdir $TEST_REPORTS_DIR
